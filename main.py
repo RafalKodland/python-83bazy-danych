@@ -1,5 +1,5 @@
 # Import
-from flask import Flask, render_template,request, redirect
+from flask import Flask, render_template, request, redirect
 # Podłączenie biblioteki bazy danych
 from flask_sqlalchemy import SQLAlchemy
 
@@ -29,39 +29,48 @@ class Card(db.Model):
 
 
 #Zadanie #2. Utwórz tabelę użytkowników
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
 
-
+    def __repr__(self):
+        return f"<User {self.id}>"
 
 # Uruchamianie strony zawartości
 @app.route('/', methods=['GET','POST'])
 def login():
-        error = ''
-        if request.method == 'POST':
-            form_login = request.form['email']
-            form_password = request.form['password']
-            
-            # Zadanie #4. Wdrożyć autoryzację
-            
+    error = ''
+    if request.method == 'POST':
+        form_login = request.form['email']
+        form_password = request.form['password']
+        
+        # Zadanie #4. Wdrożyć autoryzację
+        users = User.query.all()
+        for user in users:
+            if user.email == form_login:
+                if user.password == form_password:
+                    return redirect("/index")
 
-
-            
-        else:
-            return render_template('login.html')
+        error = "Podano nieprawdiłowe hasło lub dane konto nie istnieje"
+        return render_template("login.html", error=error)
+    else:
+        return render_template('login.html')
 
 
 
 @app.route('/reg', methods=['GET','POST'])
 def reg():
     if request.method == 'POST':
-        login= request.form['email']
+        login = request.form['email']
         password = request.form['password']
         
         # Zadanie #3. Zadbaj o to, aby dane użytkownika zostały zapisane w bazie danych
-        
-
+        new_user = User(email=login, password=password)
+        db.session.add(new_user)
+        db.session.commit()
         
         return redirect('/')
-    
     else:    
         return render_template('registration.html')
 
