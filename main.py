@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, redirect
 # Podłączenie biblioteki bazy danych
 from flask_sqlalchemy import SQLAlchemy
+from trascription import speech
 
 
 app = Flask(__name__)
@@ -98,20 +99,28 @@ def create():
 @app.route('/form_create', methods=['GET','POST'])
 def form_create():
     if request.method == 'POST':
-        title =  request.form['title']
-        subtitle =  request.form['subtitle']
-        text =  request.form['text']
+        if request.form["action"] == "create":
+            title =  request.form['title']
+            subtitle =  request.form['subtitle']
+            text =  request.form['text']
 
-        # Tworzenie obiektu, który zostanie wysłany do bazy danych
-        card = Card(title=title, subtitle=subtitle, text=text)
+            if title == "" or subtitle == "" or text == "":
+                return render_template('create_card.html', error="Wszystkie pola muszą być uzupełnione przed stworzeniem notatki!")
 
-        db.session.add(card)
-        db.session.commit()
-        return redirect('/index')
+            # Tworzenie obiektu, który zostanie wysłany do bazy danych
+            card = Card(title=title, subtitle=subtitle, text=text)
+
+            db.session.add(card)
+            db.session.commit()
+            return redirect('/index')
+        else:
+            try:
+                transcription_text = speech()
+                return render_template('create_card.html', text=transcription_text)
+            except:
+                return render_template('create_card.html', error="Błąd w transkrypcji!")
     else:
         return render_template('create_card.html')
-
-
 
 
 
